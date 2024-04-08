@@ -163,21 +163,21 @@ int main(void)
   /**********初始化舵机**********/
   spd_pid_init();
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); 
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
-  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, servo_angle3);
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, servo_angle4);
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, servo_angle1);
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, servo_angle2);
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, servo_angle7);
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
+ HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+ HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+ HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
+ HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+ HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
+ HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
+ HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
+ __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, servo_angle3);
+ __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, servo_angle4);
+ __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, servo_angle1);
+ __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, servo_angle2);
+ __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, servo_angle7);
+ __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
+ __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
+ __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
   /**********初始化舵机**********/
 
   /**********初始化OLED与菜单**********/
