@@ -422,6 +422,8 @@ void strech_test(void)
   oled_show_string(0, 0, "strech_test()");
 
   static uint8_t cutting_state=0;
+  static uint8_t grab_state=0;
+  static uint8_t strech_length_tmp=0;
   char tmp_str[25]={0};
   HAL_TIM_Base_Start_IT(&htim7);
   while (1)
@@ -441,21 +443,26 @@ void strech_test(void)
       oled_show_string(0,4,"no!!!");
     }
     
+    flexible_servo_control(strech_length_tmp);
     HAL_Delay(10);
 
     if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
     {
-      //设备上移
-      flexible_servo_control(140);
+      //爪子前移
+      strech_length_tmp=140;
+      //flexible_servo_control(140);
       oled_show_string(0, 2, "gone");
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET)
     {
-      //设备下移
-      flexible_servo_control(0);
+      //爪子后移
+      strech_length_tmp=0;
+      //flexible_servo_control(0);
       oled_show_string(0, 2, "back");
     }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
     {
-      //设备左移
+      //设备夹子抓取
+      grab_servo_control(grab_state);
+      grab_state=!grab_state;
       // set_motor_pwm(1,-400);
       // oled_show_string(0, 2, "motor lef");
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) == GPIO_PIN_RESET)
@@ -705,12 +712,12 @@ void menu_init(void){
 
   add_value(&p3, "[s_ang1]", (int *)&servo_angle1, 20, NULL);
   add_value(&p3, "[s_ang2]", (int *)&servo_angle2, 20, NULL);
-  add_value(&p3, "[s_ang3]", (int *)&servo_angle3, 10, NULL);
-  add_value(&p3, "[s_ang4]", (int *)&servo_angle4, 10, NULL);
-  add_value(&p3, "[s_ang5]", (int *)&servo_angle5, 5, NULL);
-  add_value(&p3, "[s_ang6]", (int *)&servo_angle6, 5, NULL);
-  add_value(&p3, "[s_ang7]", (int *)&servo_angle7, 5, NULL);
-  add_value(&p3, "[s_ang8]", (int *)&servo_angle8, 5, NULL);
+  add_value(&p3, "[s_ang3]", (int *)&servo_angle3, 20, NULL);
+  add_value(&p3, "[s_ang4]", (int *)&servo_angle4, 20, NULL);
+  add_value(&p3, "[s_ang5]", (int *)&servo_angle5, 20, NULL);
+  add_value(&p3, "[s_ang6]", (int *)&servo_angle6, 20, NULL);
+  add_value(&p3, "[s_ang7]", (int *)&servo_angle7, 20, NULL);
+  add_value(&p3, "[s_ang8]", (int *)&servo_angle8, 20, NULL);
   add_value_float(&p3, "[test3]", &test3, 0.3, NULL);
 
 	MenuInit(&p0);

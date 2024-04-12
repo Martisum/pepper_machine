@@ -7,7 +7,7 @@
 #include "math.h"
 
 const uint16_t GRAPH_CENTER_X=1536-716;
-const uint16_t SAGEN=700;
+const uint16_t SAGEN=400;
 
 uint8_t global_state=0;
 uint8_t stroll_dir=0; //定义STROLL状态下电机的默认移动方向
@@ -18,6 +18,9 @@ uint8_t motor1_dir=0,motor2_dir=0; //pwm电机方向记录器
 int16_t spd1=0,spd2=0;
 int16_t pwm1=0,pwm2=0;
 int16_t error_debug;
+
+uint16_t cur_motor_pul_cnt=0;
+uint16_t tar_motor_pul_cnt=0;
 
 // float v_kp1=4,v_ki1=1.5,v_kd1=0;
 // float v_kp2=4,v_ki2=1.5,v_kd2=0;
@@ -192,17 +195,35 @@ void set_servo_angle(uint8_t id,uint16_t angle){
     }
 }
 
-static const uint16_t FLEX_BIAS=15;
+//static const uint16_t FLEX_BIAS=15;
 void flexible_servo_control(uint8_t length){
-    if(length>=150) length=150;
-    set_servo_angle(UP_STRECH_SERVO,SAGEN+length);
-    set_servo_angle(DOWN_STRECH_SERVO,SAGEN-length+FLEX_BIAS);
+    tar_motor_pul_cnt=length;
+    if(tar_motor_pul_cnt>cur_motor_pul_cnt){
+        //设置方向脚
+        //gpio置一
+        HAL_Delay(1);
+        //gpio置零
+        cur_motor_pul_cnt++;
+    }else if(tar_motor_pul_cnt<cur_motor_pul_cnt){
+        //设置方向脚
+        //gpio置一
+        HAL_Delay(1);
+        //gpio置零
+        cur_motor_pul_cnt--;
+    }
+    
 }
 
 //state=0张开剪刀 state=1闭合剪刀
 void cut_servo_control(uint8_t state){
-    if(state==0) set_servo_angle(CUTTING_SERVO,370);
-    else if (state==1) set_servo_angle(CUTTING_SERVO,530);
+    if(state==0) set_servo_angle(CUTTING_SERVO,350);
+    else if (state==1) set_servo_angle(CUTTING_SERVO,800);
+}
+
+//state=0张开夹子 state=1闭合夹子
+void grab_servo_control(uint8_t state){
+    if(state==0) set_servo_angle(GRAB_SERVO,350);
+    else if (state==1) set_servo_angle(GRAB_SERVO,800);
 }
 
 // #define PC_WIRELESS 1

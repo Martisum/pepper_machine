@@ -9,7 +9,7 @@ extern const uint16_t SAGEN;
 #define UP_STRECH_SERVO   2
 #define DOWN_STRECH_SERVO 3
 #define CUTTING_SERVO     4
-#define SERVO5_NAME       5
+#define GRAB_SERVO        5
 #define SERVO6_NAME       6
 #define SERVO7_NAME 7
 #define SERVO8_NAME 8
@@ -75,5 +75,6 @@ int Uart5Recv_DealData(uint8_t *recvData, uint8_t *len);
 void set_x_location(int16_t now_x,int16_t tar_x);
 void flexible_servo_control(uint8_t length);
 void cut_servo_control(uint8_t state);
+void grab_servo_control(uint8_t state);
 
 #endif /* __MOTOR_H__ */
