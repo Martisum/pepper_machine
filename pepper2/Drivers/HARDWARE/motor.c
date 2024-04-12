@@ -7,7 +7,7 @@
 #include "math.h"
 
 const uint16_t GRAPH_CENTER_X=1536-716;
-const uint16_t SAGEN=500;
+const uint16_t SAGEN=700;
 
 uint8_t global_state=0;
 uint8_t stroll_dir=0; //定义STROLL状态下电机的默认移动方向

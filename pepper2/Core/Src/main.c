@@ -163,21 +163,21 @@ int main(void)
   /**********初始化舵机**********/
   spd_pid_init();
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); 
- HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
- HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
- HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
- HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
- HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
- HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
- HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
- __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, servo_angle3);
- __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, servo_angle4);
- __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, servo_angle1);
- __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, servo_angle2);
- __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, servo_angle7);
- __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
- __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
- __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, servo_angle3);
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, servo_angle4);
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, servo_angle1);
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, servo_angle2);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, servo_angle7);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
   /**********初始化舵机**********/
 
   /**********初始化OLED与菜单**********/
@@ -659,6 +659,31 @@ void menu_func_test(void)
   }
 }
 
+void servo_rotate_test(){
+  oled_clear();
+  oled_show_string(0, 0, "servo_rotate_test()");
+
+  static uint16_t servo_rotate_cnt=100;
+  while (1)
+  {
+    servo_rotate_cnt++;
+    if(servo_rotate_cnt>=900) servo_rotate_cnt=100;
+    set_servo_angle(3,servo_rotate_cnt);
+    oled_show_int(0,1,servo_rotate_cnt,4);
+    HAL_Delay(10);
+
+    if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_RESET)
+    {
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_RESET)
+      {
+          MenuRender(1);
+          return;
+      }
+    }
+  }
+}
+
 void menu_init(void){
   add_subpage(&p0, "function", &p1);
   add_subpage(&p0, "pid", &p2);
@@ -670,6 +695,7 @@ void menu_init(void){
   add_func(&p1, "<strech_test>", strech_test);
   add_func(&p1, "<menu_func_test>", menu_func_test);
   add_func(&p1, "<tof_test>", tof_test);
+  add_func(&p1, "<s_rotate_test>", servo_rotate_test);
   add_func(&p1, "<pwm_test>", pwm_test);
   add_func(&p1, "<spd_test>", spd_test);
   
