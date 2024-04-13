@@ -50,10 +50,12 @@ uint16_t tim7_counter=0;
 uint8_t coordinate_recv_cnt=0;
 uint8_t alighment_cnt=0;
 uint8_t strech_length=0;
-uint8_t strech_retry_time=0;
-uint8_t strech_ok_time=0;
-uint8_t strech_wait_flag=0;
+uint8_t strech_retry_time=0; //伸缩定位的重试时间
+uint8_t strech_ok_time=0; //成功抓到辣椒图像的帧数
+uint8_t strech_wait_flag=0; //等待确认openmv已经识别到辣椒的标志位
+uint8_t strech_goback_flag=0; //等待机械爪返回的标志位
 uint8_t shear_ok_time=0;
+uint8_t isPepper=0;
 /* USER CODE END TD */
 
 /* Private define ------------------------------------------------------------*/
@@ -414,7 +416,7 @@ void TIM7_IRQHandler(void)
       if(stroll_dir==0) set_motor_pwm(1,500);
       else set_motor_pwm(1,-500);
 
-      if(coordinate_recv_cnt>=10){
+      if(coordinate_recv_cnt>=15){
         global_state=LOCATE_STATE;
         //状态跳转完毕后，清空接收计数
         coordinate_recv_cnt=0;
@@ -449,7 +451,8 @@ void TIM7_IRQHandler(void)
       }
     }else if(global_state==SPREAD_STATE){
       //当opemnv视野中未出现可裁剪辣椒，且延伸长度没有到达上限，则持续向前延申
-      uint8_t isPepper=check_pepper();
+      //uint8_t isPepper=check_pepper();
+      isPepper=0;
 
       if(strech_ok_time!=0){
         tim7_counter++;
@@ -460,18 +463,29 @@ void TIM7_IRQHandler(void)
         }
       }
 
-      if(strech_length<=140 && isPepper==0 && strech_wait_flag==0){
+      if(cur_motor_pul_cnt<405 && isPepper==0 && strech_wait_flag==0 && strech_goback_flag==0){
         strech_ok_time=0;
-        strech_length++;
-        flexible_servo_control(strech_length);
+        tar_motor_pul_cnt=405;
+        flexible_servo_control(tar_motor_pul_cnt);
       }
       //当长度已经到达上限，但是仍未出现可裁剪辣椒，则回到起点，尝试重新裁剪
-      else if(strech_length>140 && isPepper==0 && strech_wait_flag==0){
+      else if(cur_motor_pul_cnt>400 && isPepper==0 && strech_wait_flag==0 && strech_goback_flag==0){
         strech_ok_time=0;
-        strech_length=0;
-        flexible_servo_control(strech_length);
+        tar_motor_pul_cnt=5;
+        strech_goback_flag=1;
+        flexible_servo_control(tar_motor_pul_cnt);
         strech_retry_time++; //增加retry时间
-      }else if(isPepper==1){
+      }else if(strech_goback_flag==1 && cur_motor_pul_cnt>5){ //这个和下面的elseif都是处理电机顺利缩回来的
+        strech_ok_time=0;
+        tar_motor_pul_cnt=5;
+        flexible_servo_control(tar_motor_pul_cnt);
+      }else if(strech_goback_flag==1 && cur_motor_pul_cnt<=5){
+        strech_ok_time=0;
+        tar_motor_pul_cnt=5;
+        strech_goback_flag=0;
+        flexible_servo_control(tar_motor_pul_cnt);
+      }
+      else if(isPepper==1){
         strech_ok_time++;
         if(strech_ok_time>=3){
           //跳转状态至剪切状态

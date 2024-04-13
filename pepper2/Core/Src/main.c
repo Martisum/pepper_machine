@@ -75,6 +75,7 @@ extern uint8_t strech_length;
 extern uint8_t strech_retry_time;
 extern uint8_t strech_ok_time;
 extern uint8_t strech_wait_flag;
+extern uint8_t strech_goback_flag;
 extern uint8_t shear_ok_time;
 /* USER CODE END PD */
 
@@ -269,12 +270,13 @@ void execute(void)
   oled_show_string(0, 0, "execute()");
   char tmp_str[25]={0};
 
-  //global_state=STROLL_STATE;
   global_state=STROLL_STATE;
+  //global_state=SPREAD_STATE;
   HAL_TIM_Base_Start_IT(&htim7);
 
   while (1)
   {
+    oled_clear();
     if(global_state==STROLL_STATE){
       oled_show_string(0, 0, "state: STROLL_STATE");
 
@@ -307,7 +309,7 @@ void execute(void)
     }else if(global_state==SPREAD_STATE){
       oled_show_string(0, 0, "state: SPREAD_STATE");
 
-      sprintf(tmp_str,"length:%d",strech_length);
+      sprintf(tmp_str,"cur_pulcnt:%d",cur_motor_pul_cnt);
       oled_show_string(0, 1, tmp_str);
 
       sprintf(tmp_str,"retry_time:%d",strech_retry_time);
@@ -319,8 +321,15 @@ void execute(void)
       sprintf(tmp_str,"wait_flag:%d",strech_wait_flag);
       oled_show_string(0, 4, tmp_str);
 
-      sprintf(tmp_str,"tim7_counter:%d",tim7_counter);
+      sprintf(tmp_str,"goback_flag:%d",strech_goback_flag);
       oled_show_string(0, 5, tmp_str);
+
+      sprintf(tmp_str,"tim7_counter:%d",tim7_counter);
+      oled_show_string(0, 6, tmp_str);
+
+      sprintf(tmp_str,"tar_pulcnt:%d",tar_motor_pul_cnt);
+      oled_show_string(0, 7, tmp_str);
+
       
     }else if(global_state==SHEAR_STATE){
       oled_show_string(0, 0, "state: SHEAR_STATE");
@@ -356,6 +365,61 @@ void execute(void)
       }
     }
   }
+}
+
+void step_motor_test(){
+  oled_clear();
+  oled_show_string(0, 0, "step_motor_test()");
+  uint8_t test_length=5;
+  char tmp_str[25]={0};
+
+  HAL_GPIO_WritePin(ENA_GPIO_Port,ENA_Pin, GPIO_PIN_SET);
+  //HAL_GPIO_WritePin(DIR_GPIO_Port,DIR_Pin, GPIO_PIN_SET);
+  
+  
+  while(1){
+    flexible_servo_control(test_length);
+    sprintf(tmp_str,"tst_len:%d",test_length);
+    oled_show_string(0, 1, tmp_str);
+    sprintf(tmp_str,"cur_pulcnt:%d",cur_motor_pul_cnt);
+    oled_show_string(0, 2, tmp_str);
+    sprintf(tmp_str,"tar_pulcnt:%d",tar_motor_pul_cnt);
+    oled_show_string(0, 3, tmp_str);
+    // HAL_GPIO_WritePin(PUL_GPIO_Port,PUL_Pin, GPIO_PIN_SET);
+    // //HAL_Delay(1);
+    // delay_us(250);
+    // HAL_GPIO_WritePin(PUL_GPIO_Port,PUL_Pin, GPIO_PIN_RESET);
+    // //HAL_Delay(1);
+    // delay_us(250);
+
+    if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_RESET)
+    {
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_RESET)
+      {
+        HAL_GPIO_WritePin(ENA_GPIO_Port,ENA_Pin, GPIO_PIN_RESET);
+        MenuRender(1);
+        return;
+      }
+    }
+    if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
+    {
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
+      {
+        test_length=200;
+      }
+    }
+    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET)
+    {
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET)
+      {
+        test_length=100;
+      }
+    }
+  }
+  
 }
 
 void wireless_test(void)
@@ -423,7 +487,7 @@ void strech_test(void)
 
   static uint8_t cutting_state=0;
   static uint8_t grab_state=0;
-  static uint8_t strech_length_tmp=0;
+  static uint32_t strech_length_tmp=5;
   char tmp_str[25]={0};
   HAL_TIM_Base_Start_IT(&htim7);
   while (1)
@@ -437,25 +501,31 @@ void strech_test(void)
     sprintf(tmp_str,"op_dis:%d",openmv_pepper_dis);
     oled_show_string(0, 3, tmp_str);
 
+    sprintf(tmp_str,"len_tmp:%d",strech_length_tmp);
+    oled_show_string(0, 4, tmp_str);
+
+    sprintf(tmp_str,"cur_pulcnt:%d",cur_motor_pul_cnt);
+    oled_show_string(0, 5, tmp_str);
+
+
     if(check_pepper()==1){
-      oled_show_string(0,4,"ok!!!");
+      oled_show_string(0,6,"ok!!!");
     }else{
-      oled_show_string(0,4,"no!!!");
+      oled_show_string(0,6,"no!!!");
     }
     
     flexible_servo_control(strech_length_tmp);
-    HAL_Delay(10);
 
     if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
     {
       //爪子前移
-      strech_length_tmp=140;
+      strech_length_tmp=200;
       //flexible_servo_control(140);
       oled_show_string(0, 2, "gone");
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET)
     {
       //爪子后移
-      strech_length_tmp=0;
+      strech_length_tmp=5;
       //flexible_servo_control(0);
       oled_show_string(0, 2, "back");
     }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
@@ -626,12 +696,12 @@ void tof_test(void)
     }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
     {
       //设备左移
-      set_motor_pwm(1,-400);
+      set_motor_pwm(1,-600);
       oled_show_string(0, 2, "motor lef");
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) == GPIO_PIN_RESET)
     {
       //设备右移
-      set_motor_pwm(1,400);
+      set_motor_pwm(1,600);
       oled_show_string(0, 2, "motor rgh");
     }else{
       set_motor_pwm(1,0);
@@ -700,11 +770,12 @@ void menu_init(void){
   add_func(&p1, "<wireless_test>", wireless_test);
   add_func(&p1, "<angle_confirm>", angle_confirm);
   add_func(&p1, "<strech_test>", strech_test);
-  add_func(&p1, "<menu_func_test>", menu_func_test);
+  add_func(&p1, "<step_motor_test>", step_motor_test);
   add_func(&p1, "<tof_test>", tof_test);
   add_func(&p1, "<s_rotate_test>", servo_rotate_test);
   add_func(&p1, "<pwm_test>", pwm_test);
   add_func(&p1, "<spd_test>", spd_test);
+  add_func(&p1, "<menu_func_test>", menu_func_test);
   
   
   add_value(&p2, "[stroll_dir]", (int *)&stroll_dir, 1, NULL);

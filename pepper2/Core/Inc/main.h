@@ -61,6 +61,12 @@ void Error_Handler(void);
 #define MOTOR2_DIR_GPIO_Port GPIOC
 #define MOTOR1_DIR_Pin GPIO_PIN_4
 #define MOTOR1_DIR_GPIO_Port GPIOA
+#define DIR_Pin GPIO_PIN_7
+#define DIR_GPIO_Port GPIOE
+#define PUL_Pin GPIO_PIN_9
+#define PUL_GPIO_Port GPIOE
+#define ENA_Pin GPIO_PIN_11
+#define ENA_GPIO_Port GPIOE
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

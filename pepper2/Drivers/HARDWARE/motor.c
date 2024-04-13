@@ -6,7 +6,8 @@
 #include "oled.h"
 #include "math.h"
 
-const uint16_t GRAPH_CENTER_X=1536-716;
+//const uint16_t GRAPH_CENTER_X=1536-716;
+const uint16_t GRAPH_CENTER_X=720;
 const uint16_t SAGEN=400;
 
 uint8_t global_state=0;
@@ -24,7 +25,7 @@ uint16_t tar_motor_pul_cnt=0;
 
 // float v_kp1=4,v_ki1=1.5,v_kd1=0;
 // float v_kp2=4,v_ki2=1.5,v_kd2=0;
-float v_kp1=1,v_ki1=0,v_kd1=0;
+float v_kp1=0.35,v_ki1=0,v_kd1=2.5;
 float v_kp2=1,v_ki2=0,v_kd2=0;
 
 SPEED whlx,whly;
@@ -76,6 +77,14 @@ void Uart5Recv_IdleCallback(void)
 	}
 }
  
+void delay_us(uint32_t us)
+{
+    for(uint32_t i = 0; i < us * 16; i++)
+    {
+        __NOP();
+    }
+}
+
 /* 
 ** 串口数据接收的数据处理后台函数
 ** ret: 0 - ok, -1 - 无数据
@@ -118,8 +127,8 @@ void set_x_location(int16_t now_x,int16_t tar_x){
     whlx.pwm_out=whlx.PS*whlx.now_error+whlx.DS*(whlx.now_error-whlx.pre_error);
     whlx.pre_error=whlx.now_error;
 
-    if(whlx.pwm_out<0) whlx.pwm_out-=250;
-    else if(whlx.pwm_out>0) whlx.pwm_out+=250;
+    if(whlx.pwm_out<0) whlx.pwm_out-=350;
+    else if(whlx.pwm_out>0) whlx.pwm_out+=350;
 
     if(whlx.pwm_out>1000) whlx.pwm_out=1000;
     else if(whlx.pwm_out<-1000) whlx.pwm_out=-1000;
@@ -151,8 +160,8 @@ void set_y_location(int16_t now_y,int16_t tar_y){
 //id为电机编号，取1~2。pwm取值-1000~1000
 //极性要求：dir=0时，电机横放，黑色屁股朝左，且编码器数值为正，调整gpio输出和编码器正负值即可
 void set_motor_pwm(uint8_t id,int16_t pwm){
-    uint8_t dir=0;
-    if(pwm<0) pwm=-pwm,dir=1;
+    uint8_t dir=1;
+    if(pwm<0) pwm=-pwm,dir=0;
     if(pwm>1000) pwm=1000;
 
     if(id==1){
@@ -196,19 +205,31 @@ void set_servo_angle(uint8_t id,uint16_t angle){
 }
 
 //static const uint16_t FLEX_BIAS=15;
-void flexible_servo_control(uint8_t length){
+void flexible_servo_control(uint16_t length){
     tar_motor_pul_cnt=length;
     if(tar_motor_pul_cnt>cur_motor_pul_cnt){
         //设置方向脚
-        //gpio置一
-        HAL_Delay(1);
-        //gpio置零
+        HAL_GPIO_WritePin(DIR_GPIO_Port,DIR_Pin, GPIO_PIN_SET);
+        for(uint8_t i=0;i<10;i++){
+            //gpio置一
+            HAL_GPIO_WritePin(PUL_GPIO_Port,PUL_Pin, GPIO_PIN_SET);
+            delay_us(10);
+            //gpio置零
+            HAL_GPIO_WritePin(PUL_GPIO_Port,PUL_Pin, GPIO_PIN_RESET);
+            delay_us(10);
+        }
         cur_motor_pul_cnt++;
     }else if(tar_motor_pul_cnt<cur_motor_pul_cnt){
         //设置方向脚
-        //gpio置一
-        HAL_Delay(1);
-        //gpio置零
+        HAL_GPIO_WritePin(DIR_GPIO_Port,DIR_Pin, GPIO_PIN_RESET);
+        for(uint8_t i=0;i<10;i++){
+            //gpio置一
+            HAL_GPIO_WritePin(PUL_GPIO_Port,PUL_Pin, GPIO_PIN_SET);
+            delay_us(10);
+            //gpio置零
+            HAL_GPIO_WritePin(PUL_GPIO_Port,PUL_Pin, GPIO_PIN_RESET);
+            delay_us(10);
+        }
         cur_motor_pul_cnt--;
     }
     

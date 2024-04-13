@@ -47,6 +47,9 @@ extern uint8_t Uart5RecvData[UART5_RECVBUFLEN]; //实际接收数据的数组（从Uart4Rec
 extern uint8_t Uart5RecvDataLen; //实际接收数据的数组接收数据的长度，和Uart4RecvCnt相同的其实
 extern int16_t x_pepper,y_pepper;
 
+extern uint16_t cur_motor_pul_cnt;
+extern uint16_t tar_motor_pul_cnt;
+
 typedef struct {
     int16_t set_targetS;
     int16_t pre_targetS;
@@ -73,8 +76,9 @@ void Uart5RecvInit(void);
 void Uart5Recv_IdleCallback(void);
 int Uart5Recv_DealData(uint8_t *recvData, uint8_t *len);
 void set_x_location(int16_t now_x,int16_t tar_x);
-void flexible_servo_control(uint8_t length);
+void flexible_servo_control(uint16_t length);
 void cut_servo_control(uint8_t state);
 void grab_servo_control(uint8_t state);
+void delay_us(uint32_t us);
 
 #endif /* __MOTOR_H__ */
