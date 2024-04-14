@@ -210,7 +210,7 @@ void flexible_servo_control(uint16_t length){
     if(tar_motor_pul_cnt>cur_motor_pul_cnt){
         //设置方向脚
         HAL_GPIO_WritePin(DIR_GPIO_Port,DIR_Pin, GPIO_PIN_SET);
-        for(uint8_t i=0;i<10;i++){
+        for(uint8_t i=0;i<50;i++){
             //gpio置一
             HAL_GPIO_WritePin(PUL_GPIO_Port,PUL_Pin, GPIO_PIN_SET);
             delay_us(10);
@@ -222,7 +222,7 @@ void flexible_servo_control(uint16_t length){
     }else if(tar_motor_pul_cnt<cur_motor_pul_cnt){
         //设置方向脚
         HAL_GPIO_WritePin(DIR_GPIO_Port,DIR_Pin, GPIO_PIN_RESET);
-        for(uint8_t i=0;i<10;i++){
+        for(uint8_t i=0;i<50;i++){
             //gpio置一
             HAL_GPIO_WritePin(PUL_GPIO_Port,PUL_Pin, GPIO_PIN_SET);
             delay_us(10);

@@ -489,6 +489,7 @@ void strech_test(void)
   static uint8_t grab_state=0;
   static uint32_t strech_length_tmp=5;
   char tmp_str[25]={0};
+  HAL_GPIO_WritePin(ENA_GPIO_Port,ENA_Pin, GPIO_PIN_SET);
   HAL_TIM_Base_Start_IT(&htim7);
   while (1)
   {
@@ -519,13 +520,13 @@ void strech_test(void)
     if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
     {
       //爪子前移
-      strech_length_tmp=200;
+      strech_length_tmp=80;
       //flexible_servo_control(140);
       oled_show_string(0, 2, "gone");
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET)
     {
       //爪子后移
-      strech_length_tmp=5;
+      strech_length_tmp=3;
       //flexible_servo_control(0);
       oled_show_string(0, 2, "back");
     }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)

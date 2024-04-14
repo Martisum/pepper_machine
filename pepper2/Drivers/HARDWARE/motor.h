@@ -6,7 +6,7 @@
 extern const uint16_t SAGEN;
 //根据舵机的实际意义进行命名，方便后面做修改
 #define SERVO1_NAME       1
-#define UP_STRECH_SERVO   2
+#define BUSKET_SERVO      2
 #define DOWN_STRECH_SERVO 3
 #define CUTTING_SERVO     4
 #define GRAB_SERVO        5

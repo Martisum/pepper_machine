@@ -463,13 +463,13 @@ void TIM7_IRQHandler(void)
         }
       }
 
-      if(cur_motor_pul_cnt<405 && isPepper==0 && strech_wait_flag==0 && strech_goback_flag==0){
+      if(cur_motor_pul_cnt<95 && isPepper==0 && strech_wait_flag==0 && strech_goback_flag==0){
         strech_ok_time=0;
-        tar_motor_pul_cnt=405;
+        tar_motor_pul_cnt=90;
         flexible_servo_control(tar_motor_pul_cnt);
       }
       //当长度已经到达上限，但是仍未出现可裁剪辣椒，则回到起点，尝试重新裁剪
-      else if(cur_motor_pul_cnt>400 && isPepper==0 && strech_wait_flag==0 && strech_goback_flag==0){
+      else if(cur_motor_pul_cnt>90 && isPepper==0 && strech_wait_flag==0 && strech_goback_flag==0){
         strech_ok_time=0;
         tar_motor_pul_cnt=5;
         strech_goback_flag=1;
@@ -538,7 +538,7 @@ void TIM7_IRQHandler(void)
       }
 
     }else if(global_state==SHRINK_STATE){
-      flexible_servo_control(0);
+      flexible_servo_control(5);
       global_state=STROLL_STATE;
       oled_clear();
     }else if(global_state==STOP_STATE){
