@@ -3,6 +3,12 @@
 
 #include "main.h"
 
+// const uint8_t PERFORMANCE_MODE = 1;
+#define PERFORMANCE_MODE 1
+//**********PERFORMANCE_MODE_OPENLOOP_PARAM**********//
+extern uint8_t pmode_length;
+//**********PERFORMANCE_MODE_OPENLOOP_PARAM**********//
+
 extern const uint16_t SAGEN;
 //根据舵机的实际意义进行命名，方便后面做修改
 #define SERVO1_NAME       1
@@ -46,6 +52,7 @@ extern uint8_t Uart5RecvCompleteFlag;
 extern uint8_t Uart5RecvData[UART5_RECVBUFLEN]; //实际接收数据的数组（从Uart4RecvBuf也就是缓冲区数组中转移出来）
 extern uint8_t Uart5RecvDataLen; //实际接收数据的数组接收数据的长度，和Uart4RecvCnt相同的其实
 extern int16_t x_pepper,y_pepper;
+extern uint8_t no_pepper_flag; //无辣椒标志位
 
 extern uint16_t cur_motor_pul_cnt;
 extern uint16_t tar_motor_pul_cnt;

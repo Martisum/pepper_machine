@@ -395,6 +395,7 @@ void TIM7_IRQHandler(void)
           if(global_state==STROLL_STATE) coordinate_recv_cnt++;
           coordinate_recv_cnt++;
         }
+        no_pepper_flag=0;
       }
 
       if(Uart5RecvData[0]=='#'){
@@ -404,6 +405,14 @@ void TIM7_IRQHandler(void)
         && Uart5RecvData[4]=='p'){
           oled_show_string(0,5,"stop");
           global_state=STOP_STATE;
+        }
+      }
+
+      if(Uart5RecvData[0]=='#'){
+        if(Uart5RecvData[1]=='n'
+        && Uart5RecvData[2]=='o'){
+          oled_show_string(0,5,"no");
+          no_pepper_flag=1; //视为没有收到辣椒
         }
       }
       // Uart5RecvData[Uart5RecvDataLen]='\0';
@@ -451,6 +460,14 @@ void TIM7_IRQHandler(void)
         __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
       }
     }else if(global_state==SPREAD_STATE){
+#ifdef PERFORMANCE_MODE
+      flexible_servo_control(pmode_length);
+      if(cur_motor_pul_cnt>=pmode_length){
+        global_state=SHEAR_STATE;
+        tim7_counter=0;
+        oled_clear();
+      }
+#else
       //当opemnv视野中未出现可裁剪辣椒，且延伸长度没有到达上限，则持续向前延申
       uint8_t isPepper=check_pepper();
       //isPepper=0;
@@ -514,9 +531,33 @@ void TIM7_IRQHandler(void)
         global_state=STROLL_STATE;
         oled_clear();
       }
-
-
+#endif
     }else if(global_state==SHEAR_STATE){
+#ifdef PERFORMANCE_MODE
+      if(no_pepper_flag==0 || tim7_counter!=0){
+        shear_ok_time=0;
+        tim7_counter++;
+        if(tim7_counter<150){
+          cut_servo_control(0);
+        }else if(tim7_counter>=150 && tim7_counter<300){
+          cut_servo_control(1);
+        }else if(tim7_counter>=300){
+          tim7_counter=0;
+        }
+      }
+      //no_pepper_flag==1是确保辣椒已经没有了
+      //tim7_counter==0，要求同时剪刀已经执行完了自己的任务，才能跳到shearok状态
+      else if(no_pepper_flag==1 && tim7_counter==0){
+        shear_ok_time++;
+        cut_servo_control(1);
+        if(shear_ok_time>25){
+          cut_servo_control(0);
+          tim7_counter=0;
+          global_state=SHRINK_STATE;
+          oled_clear();
+        }
+      }
+#else
       uint8_t isPepper=check_pepper();
       //只要摄像头始终显示有辣椒，就不断进行剪切操作
       if(isPepper==1 || tim7_counter!=0){
@@ -539,7 +580,7 @@ void TIM7_IRQHandler(void)
           oled_clear();
         }
       }
-
+#endif
     }else if(global_state==SHRINK_STATE){
       flexible_servo_control(5);
       cut_servo_control(0);

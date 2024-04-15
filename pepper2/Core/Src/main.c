@@ -307,6 +307,12 @@ void execute(void)
       sprintf(tmp_str,"now_error:%d",whlx.now_error); 
       oled_show_string(0, 6, tmp_str);   
     }else if(global_state==SPREAD_STATE){
+#ifdef PERFORMANCE_MODE
+      oled_show_string(0, 0, "state: SPREAD_STATE");
+
+      sprintf(tmp_str,"cur_pulcnt:%d",cur_motor_pul_cnt);
+      oled_show_string(0, 1, tmp_str);
+#else
       oled_show_string(0, 0, "state: SPREAD_STATE");
 
       sprintf(tmp_str,"cur_pulcnt:%d",cur_motor_pul_cnt);
@@ -329,8 +335,7 @@ void execute(void)
 
       sprintf(tmp_str,"tar_pulcnt:%d",tar_motor_pul_cnt);
       oled_show_string(0, 7, tmp_str);
-
-      
+#endif
     }else if(global_state==SHEAR_STATE){
       oled_show_string(0, 0, "state: SHEAR_STATE");
 
@@ -442,6 +447,9 @@ void wireless_test(void)
     sprintf(tmp_str,"whlx_pwm:%d",pwm1); 
     oled_show_string(0, 3, tmp_str);   
 
+    sprintf(tmp_str,"isnopepper:%d",no_pepper_flag);
+    oled_show_string(0, 4, tmp_str);
+
     HAL_Delay(10);
 
     if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET)
@@ -519,35 +527,53 @@ void strech_test(void)
 
     if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
     {
-      //爪子前移
-      strech_length_tmp=80;
-      //flexible_servo_control(140);
-      oled_show_string(0, 2, "gone");
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET){
+        //爪子前移
+        //用来测试开环前移长度
+        strech_length_tmp=pmode_length;
+        //flexible_servo_control(140);
+        oled_show_string(0, 2, "gone");
+      }
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET)
     {
-      //爪子后移
-      strech_length_tmp=3;
-      //flexible_servo_control(0);
-      oled_show_string(0, 2, "back");
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET){
+        //爪子后移
+        strech_length_tmp=5;
+        //flexible_servo_control(0);
+        oled_show_string(0, 2, "back");
+      }
+      
     }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
     {
-      //设备夹子抓取
-      grab_servo_control(grab_state);
-      grab_state=!grab_state;
-      // set_motor_pwm(1,-400);
-      // oled_show_string(0, 2, "motor lef");
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET){
+        //设备夹子抓取
+        grab_servo_control(grab_state);
+        grab_state=!grab_state;
+        // set_motor_pwm(1,-400);
+        // oled_show_string(0, 2, "motor lef");
+      }
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) == GPIO_PIN_RESET)
     {
-      //设备右移
-      // set_motor_pwm(1,400);
-      // oled_show_string(0, 2, "motor rgh");
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) == GPIO_PIN_RESET){
+        //设备右移
+        // set_motor_pwm(1,400);
+        // oled_show_string(0, 2, "motor rgh");
+      }
+      
     }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET)
     {
-      cut_servo_control(cutting_state);
-      cutting_state=!cutting_state;
-      //设备右移
-      // set_motor_pwm(1,400);
-      oled_show_string(0, 2, "cutt");
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET){
+        cut_servo_control(cutting_state);
+        cutting_state=!cutting_state;
+        //设备右移
+        // set_motor_pwm(1,400);
+        oled_show_string(0, 2, "cutt");
+      }
     }
 
     if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_RESET)
@@ -779,6 +805,7 @@ void menu_init(void){
   add_func(&p1, "<menu_func_test>", menu_func_test);
   
   
+  add_value(&p2, "[pmode_length]", (int *)&pmode_length, 5, NULL);
   add_value(&p2, "[stroll_dir]", (int *)&stroll_dir, 1, NULL);
   add_value(&p2, "[test4]", (int *)&test4, 1, NULL);
 

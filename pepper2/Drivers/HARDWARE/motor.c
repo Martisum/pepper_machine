@@ -6,6 +6,10 @@
 #include "oled.h"
 #include "math.h"
 
+//**********PERFORMANCE_MODE_OPENLOOP_PARAM**********//
+uint8_t pmode_length=110;
+//**********PERFORMANCE_MODE_OPENLOOP_PARAM**********//
+
 //const uint16_t GRAPH_CENTER_X=1536-716;
 const uint16_t GRAPH_CENTER_X=1790;
 const uint16_t SAGEN=400;
@@ -25,7 +29,7 @@ uint16_t tar_motor_pul_cnt=0;
 
 // float v_kp1=4,v_ki1=1.5,v_kd1=0;
 // float v_kp2=4,v_ki2=1.5,v_kd2=0;
-float v_kp1=1,v_ki1=0,v_kd1=3;
+float v_kp1=1,v_ki1=0,v_kd1=4;
 float v_kp2=1,v_ki2=0,v_kd2=0;
 
 SPEED whlx,whly;
@@ -52,6 +56,7 @@ uint8_t Uart5RecvData[UART5_RECVBUFLEN]={0}; //实际接收数据的数组（从Uart4RecvBu
 uint8_t Uart5RecvDataLen = 0; //实际接收数据的数组接收数据的长度，和Uart4RecvCnt相同的其实
 extern DMA_HandleTypeDef hdma_uart5_rx;
 int16_t x_pepper,y_pepper; //解算后得到的辣椒坐标
+uint8_t no_pepper_flag=0; //无辣椒标志位
 /* 初始化函数 */
 void Uart5RecvInit(void)
 {
@@ -127,8 +132,8 @@ void set_x_location(int16_t now_x,int16_t tar_x){
     whlx.pwm_out=whlx.PS*whlx.now_error+whlx.DS*(whlx.now_error-whlx.pre_error);
     whlx.pre_error=whlx.now_error;
 
-    if(whlx.pwm_out<0) whlx.pwm_out-=350;
-    else if(whlx.pwm_out>0) whlx.pwm_out+=350;
+    if(whlx.pwm_out<0) whlx.pwm_out-=300;
+    else if(whlx.pwm_out>0) whlx.pwm_out+=300;
 
     if(whlx.pwm_out>1000) whlx.pwm_out=1000;
     else if(whlx.pwm_out<-1000) whlx.pwm_out=-1000;
