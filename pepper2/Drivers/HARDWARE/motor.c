@@ -7,7 +7,7 @@
 #include "math.h"
 
 //const uint16_t GRAPH_CENTER_X=1536-716;
-const uint16_t GRAPH_CENTER_X=720;
+const uint16_t GRAPH_CENTER_X=1790;
 const uint16_t SAGEN=400;
 
 uint8_t global_state=0;
@@ -25,7 +25,7 @@ uint16_t tar_motor_pul_cnt=0;
 
 // float v_kp1=4,v_ki1=1.5,v_kd1=0;
 // float v_kp2=4,v_ki2=1.5,v_kd2=0;
-float v_kp1=0.35,v_ki1=0,v_kd1=2.5;
+float v_kp1=1,v_ki1=0,v_kd1=3;
 float v_kp2=1,v_ki2=0,v_kd2=0;
 
 SPEED whlx,whly;

@@ -687,22 +687,22 @@ void tof_test(void)
     if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
     {
       //设备上移
-      set_motor_pwm(2,400);
+      set_motor_pwm(2,900);
       oled_show_string(0, 2, "motor upn");
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET)
     {
       //设备下移
-      set_motor_pwm(2,-400);
+      set_motor_pwm(2,-900);
       oled_show_string(0, 2, "motor dwn");
     }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
     {
       //设备左移
-      set_motor_pwm(1,-600);
+      set_motor_pwm(1,-800);
       oled_show_string(0, 2, "motor lef");
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) == GPIO_PIN_RESET)
     {
       //设备右移
-      set_motor_pwm(1,600);
+      set_motor_pwm(1,800);
       oled_show_string(0, 2, "motor rgh");
     }else{
       set_motor_pwm(1,0);

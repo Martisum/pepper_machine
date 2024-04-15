@@ -412,9 +412,10 @@ void TIM7_IRQHandler(void)
 
     //状态机
     if(global_state==STROLL_STATE){
+      flexible_servo_control(5);
       //累计收到十次以上坐标信息，那么就会跳转状态为LOCATE_STATE
-      if(stroll_dir==0) set_motor_pwm(1,500);
-      else set_motor_pwm(1,-500);
+      if(stroll_dir==0) set_motor_pwm(1,600);
+      else set_motor_pwm(1,-600);
 
       if(coordinate_recv_cnt>=15){
         global_state=LOCATE_STATE;
@@ -451,8 +452,8 @@ void TIM7_IRQHandler(void)
       }
     }else if(global_state==SPREAD_STATE){
       //当opemnv视野中未出现可裁剪辣椒，且延伸长度没有到达上限，则持续向前延申
-      //uint8_t isPepper=check_pepper();
-      isPepper=0;
+      uint8_t isPepper=check_pepper();
+      //isPepper=0;
 
       if(strech_ok_time!=0){
         tim7_counter++;
@@ -532,6 +533,8 @@ void TIM7_IRQHandler(void)
         shear_ok_time++;
         cut_servo_control(1);
         if(shear_ok_time>25){
+          cut_servo_control(0);
+          tim7_counter=0;
           global_state=SHRINK_STATE;
           oled_clear();
         }
@@ -539,8 +542,14 @@ void TIM7_IRQHandler(void)
 
     }else if(global_state==SHRINK_STATE){
       flexible_servo_control(5);
-      global_state=STROLL_STATE;
-      oled_clear();
+      cut_servo_control(0);
+
+      tim7_counter++;
+      if(tim7_counter>200){
+        tim7_counter=0;
+        global_state=STROLL_STATE;
+        oled_clear();
+      }
     }else if(global_state==STOP_STATE){
       set_motor_pwm(1,0);
       set_motor_pwm(2,0);
