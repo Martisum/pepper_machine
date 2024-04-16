@@ -10,8 +10,12 @@
 uint8_t pmode_length=110;
 //**********PERFORMANCE_MODE_OPENLOOP_PARAM**********//
 
+//**********STROLL_PERFORMANCE_MODE_OPENLOOP_PARAM**********//
+uint16_t stroll_time=100;
+//**********STROLL_PERFORMANCE_MODE_OPENLOOP_PARAM**********//
+
 //const uint16_t GRAPH_CENTER_X=1536-716;
-const uint16_t GRAPH_CENTER_X=1790;
+const uint16_t GRAPH_CENTER_X=1540;
 const uint16_t SAGEN=400;
 
 uint8_t global_state=0;
@@ -42,7 +46,7 @@ SPEED dir;
 uint16_t servo_angle1=SAGEN;
 uint16_t servo_angle2=SAGEN;
 uint16_t servo_angle3=SAGEN;
-uint16_t servo_angle4=SAGEN;
+uint16_t servo_angle4=160;
 uint16_t servo_angle5=SAGEN;
 uint16_t servo_angle6=SAGEN;
 uint16_t servo_angle7=SAGEN;
@@ -242,14 +246,14 @@ void flexible_servo_control(uint16_t length){
 
 //state=0张开剪刀 state=1闭合剪刀
 void cut_servo_control(uint8_t state){
-    if(state==0) set_servo_angle(CUTTING_SERVO,350);
-    else if (state==1) set_servo_angle(CUTTING_SERVO,800);
+    if(state==0) set_servo_angle(CUTTING_SERVO,160);
+    else if (state==1) set_servo_angle(CUTTING_SERVO,400);
 }
 
 //state=0张开夹子 state=1闭合夹子
 void grab_servo_control(uint8_t state){
     if(state==0) set_servo_angle(GRAB_SERVO,350);
-    else if (state==1) set_servo_angle(GRAB_SERVO,800);
+    else if (state==1) set_servo_angle(GRAB_SERVO,750);
 }
 
 // #define PC_WIRELESS 1

@@ -9,6 +9,11 @@
 extern uint8_t pmode_length;
 //**********PERFORMANCE_MODE_OPENLOOP_PARAM**********//
 
+//#define STROLL_PERFORMANCE_MODE 1
+//**********STROLL_PERFORMANCE_MODE_OPENLOOP_PARAM**********//
+extern uint16_t stroll_time;
+//**********STROLL_PERFORMANCE_MODE_OPENLOOP_PARAM**********//extern 
+
 extern const uint16_t SAGEN;
 //根据舵机的实际意义进行命名，方便后面做修改
 #define SERVO1_NAME       1

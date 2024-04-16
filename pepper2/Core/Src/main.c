@@ -269,6 +269,7 @@ void execute(void)
   oled_clear();
   oled_show_string(0, 0, "execute()");
   char tmp_str[25]={0};
+  tim7_counter=0;
 
   global_state=STROLL_STATE;
   //global_state=SPREAD_STATE;
@@ -494,7 +495,7 @@ void strech_test(void)
   oled_show_string(0, 0, "strech_test()");
 
   static uint8_t cutting_state=0;
-  static uint8_t grab_state=0;
+  uint8_t grab_state=0;
   static uint32_t strech_length_tmp=5;
   char tmp_str[25]={0};
   HAL_GPIO_WritePin(ENA_GPIO_Port,ENA_Pin, GPIO_PIN_SET);
@@ -516,12 +517,15 @@ void strech_test(void)
     sprintf(tmp_str,"cur_pulcnt:%d",cur_motor_pul_cnt);
     oled_show_string(0, 5, tmp_str);
 
+    sprintf(tmp_str,"cutting_state:%d",cutting_state);
+    oled_show_string(0, 6, tmp_str);
 
-    if(check_pepper()==1){
-      oled_show_string(0,6,"ok!!!");
-    }else{
-      oled_show_string(0,6,"no!!!");
-    }
+
+    // if(check_pepper()==1){
+    //   oled_show_string(0,6,"ok!!!");
+    // }else{
+    //   oled_show_string(0,6,"no!!!");
+    // }
     
     flexible_servo_control(strech_length_tmp);
 
@@ -572,7 +576,7 @@ void strech_test(void)
         cutting_state=!cutting_state;
         //…Ë±∏”““∆
         // set_motor_pwm(1,400);
-        oled_show_string(0, 2, "cutt");
+        //oled_show_string(0, 2, "cutt");
       }
     }
 
@@ -805,6 +809,7 @@ void menu_init(void){
   add_func(&p1, "<menu_func_test>", menu_func_test);
   
   
+  add_value(&p2, "[stroll_time]", (int *)&stroll_time, 10, NULL);
   add_value(&p2, "[pmode_length]", (int *)&pmode_length, 5, NULL);
   add_value(&p2, "[stroll_dir]", (int *)&stroll_dir, 1, NULL);
   add_value(&p2, "[test4]", (int *)&test4, 1, NULL);

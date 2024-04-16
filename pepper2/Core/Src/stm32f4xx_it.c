@@ -423,16 +423,48 @@ void TIM7_IRQHandler(void)
     if(global_state==STROLL_STATE){
       flexible_servo_control(5);
       //累计收到十次以上坐标信息，那么就会跳转状态为LOCATE_STATE
-      if(stroll_dir==0) set_motor_pwm(1,600);
-      else set_motor_pwm(1,-600);
-
+      if(stroll_dir==0) set_motor_pwm(1,700);
+      else set_motor_pwm(1,-700);
+#ifdef STROLL_PERFORMANCE_MODE
+      tim7_counter++;
+      if(tim7_counter>=stroll_time){
+        global_state=LOCATE_STATE;
+        //状态跳转完毕后，清空接收计数
+        coordinate_recv_cnt=0;
+        oled_clear();
+      }
+#else
       if(coordinate_recv_cnt>=15){
         global_state=LOCATE_STATE;
         //状态跳转完毕后，清空接收计数
         coordinate_recv_cnt=0;
         oled_clear();
       }
+#endif
     }else if(global_state==LOCATE_STATE){
+#ifdef STROLL_PERFORMANCE_MODE
+      //清空对准计数，跳转到下一状态
+      alighment_cnt=0;
+      global_state=SPREAD_STATE;
+      cut_servo_control(0);
+      strech_length=0;
+      strech_retry_time=0;
+      strech_ok_time=0;
+      strech_wait_flag=0;
+      oled_clear();
+
+      //停止所有电机，复位所有舵机
+      set_motor_pwm(1,0);
+      set_motor_pwm(2,0);
+      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, servo_angle3);
+      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, servo_angle4);
+      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, servo_angle1);
+      __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, servo_angle2);
+      __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, servo_angle7);
+      __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
+      __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
+      __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
+#else
       set_x_location(x_pepper,GRAPH_CENTER_X);
       //对符合条件的进行计次，超过200次说明趋于稳定，则可以进入下一状态
       if(abs(x_pepper-GRAPH_CENTER_X)<=50) alighment_cnt++;
@@ -459,6 +491,8 @@ void TIM7_IRQHandler(void)
         __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
         __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
       }
+#endif
+      
     }else if(global_state==SPREAD_STATE){
 #ifdef PERFORMANCE_MODE
       flexible_servo_control(pmode_length);
