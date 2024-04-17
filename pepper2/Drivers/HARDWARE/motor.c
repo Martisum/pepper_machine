@@ -44,7 +44,7 @@ SPEED dir;
 //具体编号对应舵机的意义，参考.h宏定义
 //下面是各编号舵机初始值
 uint16_t servo_angle1=SAGEN;
-uint16_t servo_angle2=SAGEN;
+uint16_t servo_angle2=650; //伸缩盘舵机初始值
 uint16_t servo_angle3=SAGEN;
 uint16_t servo_angle4=160;
 uint16_t servo_angle5=SAGEN;
@@ -254,6 +254,12 @@ void cut_servo_control(uint8_t state){
 void grab_servo_control(uint8_t state){
     if(state==0) set_servo_angle(GRAB_SERVO,350);
     else if (state==1) set_servo_angle(GRAB_SERVO,750);
+}
+
+//state=0缩回篮子 state=1伸出篮子
+void busket_servo_control(uint8_t state){
+    if(state==0) set_servo_angle(BUSKET_SERVO,650);
+    else if (state==1) set_servo_angle(BUSKET_SERVO,250);
 }
 
 // #define PC_WIRELESS 1

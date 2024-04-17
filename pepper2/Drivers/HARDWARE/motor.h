@@ -91,6 +91,7 @@ void set_x_location(int16_t now_x,int16_t tar_x);
 void flexible_servo_control(uint16_t length);
 void cut_servo_control(uint8_t state);
 void grab_servo_control(uint8_t state);
+void busket_servo_control(uint8_t state);
 void delay_us(uint32_t us);
 
 #endif /* __MOTOR_H__ */

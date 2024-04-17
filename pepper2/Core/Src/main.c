@@ -495,7 +495,8 @@ void strech_test(void)
   oled_show_string(0, 0, "strech_test()");
 
   static uint8_t cutting_state=0;
-  uint8_t grab_state=0;
+  static uint8_t grab_state=0;
+  static uint8_t busket_state=0;
   static uint32_t strech_length_tmp=5;
   char tmp_str[25]={0};
   HAL_GPIO_WritePin(ENA_GPIO_Port,ENA_Pin, GPIO_PIN_SET);
@@ -563,9 +564,11 @@ void strech_test(void)
     {
       HAL_Delay(KEY_DelayTime);
       if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) == GPIO_PIN_RESET){
-        //设备右移
-        // set_motor_pwm(1,400);
-        // oled_show_string(0, 2, "motor rgh");
+        //设备左移
+        busket_servo_control(busket_state);
+        busket_state=!busket_state;
+        //oled_show_string(0, 2, "aaaaaaaaaaaaaaaaa");
+        //oled_show_int(100,2,busket_state,2);
       }
       
     }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET)
