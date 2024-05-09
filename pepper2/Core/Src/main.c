@@ -142,26 +142,31 @@ int main(void)
   MX_UART5_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
+    /**********初始化电机**********/
+    HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);
+    __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_3, 0);
+    __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_4, 0);
+  /**********初始化电机**********/
+
   /**********系统启动**********/
+  //初始化OLED
+  oled_init();
+  oled_clear();
   //printf("SystemWakeUp!\n");
   HAL_UART_Transmit(&huart4, (uint8_t *)"SystemWakeUp!\n", 18,1000);
   Uart4RecvInit();
-
+  oled_show_string(0,0,(const uint8_t *)"SystemWakeUp!");
   /**********初始化无线**********/
   HAL_UART_Transmit(&huart5, (uint8_t *)"WirelessOK!\n", 12, 1000);
   Uart5RecvInit();
+  oled_show_string(0,1,(const uint8_t *)"WirelessOK!");
   /**********初始化无线**********/
 
   /**********初始化摄像头串口**********/
   Uart3RecvInit();
+  oled_show_string(0,2,(const uint8_t *)"Openmv(Uart3)OK!");
   /**********初始化摄像头串口**********/
-
-  /**********初始化电机**********/
-  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);
-  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_3, 0);
-  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_4, 0);
-  /**********初始化电机**********/
 
   /**********初始化舵机**********/
   height_data_init();
@@ -182,6 +187,10 @@ int main(void)
   __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
   __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
   __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
+  oled_show_string(0,3,(const uint8_t *)"All Servos Ready!");
+  start_recv_coorData(1);
+  oled_show_string(0,4,(const uint8_t *)"Send action Data!");
+  oled_show_string(0,5,(const uint8_t *)"Testing Grab Servo!");
   grab_servo_control(1);
   HAL_Delay(1000);
   grab_servo_control(0);
@@ -189,15 +198,18 @@ int main(void)
   grab_servo_control(1);
   /**********初始化舵机**********/
 
-  /**********初始化OLED与菜单**********/
-  oled_init();
-  oled_clear();
-  menu_init();
-  /**********初始化OLED与菜单**********/
-
   /**********初始化TOF**********/
   tof_init();
+  oled_show_string(0,6,(const uint8_t *)"TOF OK!");
+  HAL_Delay(300);
   /**********初始化TOF**********/
+
+  /**********初始化菜单**********/
+  oled_clear();
+  menu_init();
+  /**********初始化菜单**********/
+
+
 
   /* USER CODE END 2 */
 
@@ -282,6 +294,7 @@ void execute(void)
   global_state=STROLL_STATE;
   //global_state=SPREAD_STATE;
   HAL_TIM_Base_Start_IT(&htim7);
+  start_recv_coorData(1);
 
   while (1)
   {
@@ -364,6 +377,40 @@ void execute(void)
 
       sprintf(tmp_str,"tim7_counter:%d",tim7_counter);
       oled_show_string(0, 2, tmp_str);
+    }
+
+    if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
+    {
+      //设备上移
+      set_motor_pwm(2,800);
+      oled_show_string(0, 2, "motor dwn");
+    }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET)
+    {
+      //设备下移
+      set_motor_pwm(2,-800);
+      oled_show_string(0, 2, "motor upn");
+    }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
+    {
+      //设备左移
+      set_motor_pwm(1,-700);
+      oled_show_string(0, 2, "motor lef");
+    }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) == GPIO_PIN_RESET)
+    {
+      //设备右移
+      set_motor_pwm(1,700);
+      oled_show_string(0, 2, "motor rgh");
+    }else{
+      set_motor_pwm(1,0);
+      set_motor_pwm(2,0);
+      //oled_show_string(0, 2, "motor none");
+    }
+
+    if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET)
+    {
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET){
+        global_state=SHRINK_STATE;
+      }
     }
     
 
@@ -480,14 +527,12 @@ void wireless_test(void)
         // set_motor_pwm(1,400);
         if(isRecvPosition==0){
           //发送关闭的信息
-          char send_str[]="close";
-          HAL_UART_Transmit(&huart5,(const uint8_t *)send_str,sizeof(send_str),1000);
+          start_recv_coorData(isRecvPosition);
           oled_show_string(0, 2, "sendoff");
           isRecvPosition=1;
         }else if(isRecvPosition==1){
           //发送开启的信息
-          char send_str[]="open";
-          HAL_UART_Transmit(&huart5,(const uint8_t *)send_str,sizeof(send_str),1000);
+          start_recv_coorData(isRecvPosition);
           oled_show_string(0, 2, "send on");
           isRecvPosition=0;
         }
@@ -778,22 +823,22 @@ void tof_test(void)
     if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_3) == GPIO_PIN_RESET)
     {
       //设备上移
-      set_motor_pwm(2,900);
+      set_motor_pwm(2,800);
       oled_show_string(0, 2, "motor dwn");
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET)
     {
       //设备下移
-      set_motor_pwm(2,-900);
+      set_motor_pwm(2,-800);
       oled_show_string(0, 2, "motor upn");
     }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
     {
       //设备左移
-      set_motor_pwm(1,-800);
+      set_motor_pwm(1,-700);
       oled_show_string(0, 2, "motor lef");
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9) == GPIO_PIN_RESET)
     {
       //设备右移
-      set_motor_pwm(1,800);
+      set_motor_pwm(1,700);
       oled_show_string(0, 2, "motor rgh");
     }else{
       set_motor_pwm(1,0);

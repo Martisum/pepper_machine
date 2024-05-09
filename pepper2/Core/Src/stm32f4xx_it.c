@@ -611,6 +611,7 @@ void TIM7_IRQHandler(void)
           cut_servo_control(0);
           busket_servo_control(1); //伸出收集筐
           tim7_counter=0;
+          //start_recv_coorData(0); //关闭信息发送
           global_state=SHRINK_STATE;
           oled_clear();
         }
@@ -651,6 +652,7 @@ void TIM7_IRQHandler(void)
       if(tim7_counter>200){
         tim7_counter=0;
         busket_servo_control(0); //最后再把篮子收回
+        //start_recv_coorData(1);
         global_state=STROLL_STATE;
         oled_clear();
       }

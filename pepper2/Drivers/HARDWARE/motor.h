@@ -110,5 +110,6 @@ void grab_servo_control(uint8_t state);
 void busket_servo_control(uint8_t state);
 void delay_us(uint32_t us);
 void height_data_init(void);
+void start_recv_coorData(uint8_t state);
 
 #endif /* __MOTOR_H__ */

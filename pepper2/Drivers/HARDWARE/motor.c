@@ -301,6 +301,16 @@ void height_data_init(void){
     linearRegression(H_Data, 9, &H_a, &H_b);
 }
 
+//开启坐标数据接收 state=0关闭数据接收 state=1开启数据接收
+void start_recv_coorData(uint8_t state){
+    if(state==0){
+        char send_str[]="close";
+        HAL_UART_Transmit(&huart5,(const uint8_t *)send_str,sizeof(send_str),1000);
+    }else if(state==1){
+        char send_str[]="open";
+        HAL_UART_Transmit(&huart5,(const uint8_t *)send_str,sizeof(send_str),1000);
+    }    
+}
 
 // #define PC_WIRELESS 1
 #define BYTE0(dwTemp) (*(char *)(&dwTemp))
