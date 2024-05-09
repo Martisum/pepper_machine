@@ -43,6 +43,7 @@ float test1 = 0, test2 = 1, test3 = 2;
 int16_t test4 = 3, test5 = 4, test6 = 5;
 
 uint8_t wireless_test_in_flag=0;
+uint8_t y_pid_test_flag=0;
 
 void menu_init(void);
 void menu_func_test(void);
@@ -53,6 +54,7 @@ void angle_confirm(void);
 void wireless_test(void);
 void strech_test(void);
 void execute(void);
+void y_pid_test(void);
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -70,7 +72,7 @@ int Uart4Recv_DealData(uint8_t *recvData, uint8_t *len);
 
 extern uint16_t tim7_counter;
 extern uint8_t coordinate_recv_cnt;
-extern uint8_t alighment_cnt;
+extern uint16_t alighment_cnt;
 extern uint8_t strech_length;
 extern uint8_t strech_retry_time;
 extern uint8_t strech_ok_time;
@@ -162,6 +164,7 @@ int main(void)
   /**********初始化电机**********/
 
   /**********初始化舵机**********/
+  height_data_init();
   spd_pid_init();
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); 
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
@@ -179,6 +182,11 @@ int main(void)
   __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
   __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
   __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
+  grab_servo_control(1);
+  HAL_Delay(1000);
+  grab_servo_control(0);
+  HAL_Delay(1000);
+  grab_servo_control(1);
   /**********初始化舵机**********/
 
   /**********初始化OLED与菜单**********/
@@ -290,7 +298,7 @@ void execute(void)
     }else if(global_state==LOCATE_STATE){
       oled_show_string(0, 0, "state: LOCATE_STATE");
 
-      sprintf(tmp_str,"x:%d",x_pepper);
+      sprintf(tmp_str,"H_a:%.2f",H_a);
       oled_show_string(0, 1, tmp_str);
 
       sprintf(tmp_str,"y:%d",y_pepper);
@@ -299,14 +307,17 @@ void execute(void)
       sprintf(tmp_str,"whlx_pwm:%d",pwm1); 
       oled_show_string(0, 3, tmp_str);   
 
-      sprintf(tmp_str,"whly_pwm:%d",pwm2); 
+      sprintf(tmp_str,"err_y:%d",whly.now_error); 
       oled_show_string(0, 4, tmp_str);   
 
       sprintf(tmp_str,"alighment_cnt:%d",alighment_cnt);
       oled_show_string(0, 5, tmp_str); 
 
-      sprintf(tmp_str,"now_error:%d",whlx.now_error); 
+      sprintf(tmp_str,"alighment_cnt_h:%d",h_aligntment_cnt); 
       oled_show_string(0, 6, tmp_str);   
+
+      sprintf(tmp_str,"simu_tarh:%d",simu_tarh); 
+      oled_show_string(0, 7, tmp_str);   
     }else if(global_state==SPREAD_STATE){
 #ifdef PERFORMANCE_MODE
       oled_show_string(0, 0, "state: SPREAD_STATE");
@@ -342,6 +353,14 @@ void execute(void)
 
       sprintf(tmp_str,"shear_ok_time:%d",shear_ok_time);
       oled_show_string(0, 1, tmp_str);
+
+      sprintf(tmp_str,"tim7_counter:%d",tim7_counter);
+      oled_show_string(0, 2, tmp_str);
+    }else if(global_state==SHRINK_STATE){
+      oled_show_string(0, 0, "state: SHRINK_STATE");
+
+      // sprintf(tmp_str,"shear_ok_time:%d",shear_ok_time);
+      // oled_show_string(0, 1, tmp_str);
 
       sprintf(tmp_str,"tim7_counter:%d",tim7_counter);
       oled_show_string(0, 2, tmp_str);
@@ -629,6 +648,45 @@ void angle_confirm(void)
   }
 }
 
+void y_pid_test(void)
+{
+  oled_clear();
+  oled_show_string(0, 0, "y_pid_test()");
+  HAL_TIM_Base_Start_IT(&htim7);
+  
+  char tmp_str[25]={0};
+  while (1)
+  {
+		y_pid_test_flag=1;
+    sprintf(tmp_str,"tof_distance:%0.2f",tof_distance);
+    oled_show_string(0, 1, tmp_str);
+    sprintf(tmp_str,"pwm:%d",whly.pwm_out);
+    oled_show_string(0, 2, tmp_str);
+    sprintf(tmp_str,"flag:%d",y_pid_test_flag);
+    oled_show_string(0, 3, tmp_str);
+    sprintf(tmp_str,"nerr:%d",whly.now_error);
+    oled_show_string(0, 4, tmp_str);
+    sprintf(tmp_str,"tar:%d",whly.set_targetS);
+    oled_show_string(0, 5, tmp_str);
+    sprintf(tmp_str,"kp:%d",whly.PS);
+    oled_show_string(0, 6, tmp_str);
+    
+
+    HAL_Delay(10);
+    if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_RESET)
+    {
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_RESET)
+      {
+        HAL_TIM_Base_Stop_IT(&htim7);
+        y_pid_test_flag=0;
+        MenuRender(1);
+        return;
+      }
+    }
+  }
+}
+
 void spd_test(void)
 {
   oled_clear();
@@ -721,12 +779,12 @@ void tof_test(void)
     {
       //设备上移
       set_motor_pwm(2,900);
-      oled_show_string(0, 2, "motor upn");
+      oled_show_string(0, 2, "motor dwn");
     }else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_8) == GPIO_PIN_RESET)
     {
       //设备下移
       set_motor_pwm(2,-900);
-      oled_show_string(0, 2, "motor dwn");
+      oled_show_string(0, 2, "motor upn");
     }else if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_1) == GPIO_PIN_RESET)
     {
       //设备左移
@@ -809,7 +867,9 @@ void menu_init(void){
   add_func(&p1, "<s_rotate_test>", servo_rotate_test);
   add_func(&p1, "<pwm_test>", pwm_test);
   add_func(&p1, "<spd_test>", spd_test);
+  add_func(&p1, "<y_pid_test>", y_pid_test);
   add_func(&p1, "<menu_func_test>", menu_func_test);
+  
   
   
   add_value(&p2, "[stroll_time]", (int *)&stroll_time, 10, NULL);

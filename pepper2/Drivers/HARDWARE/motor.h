@@ -33,6 +33,8 @@ extern const uint16_t SAGEN;
 #define SHRINK_STATE 5 //收缩机械爪，清空中间用到的所有变量，完成一个控制周期 状态跳转：无，延时后回到状态1
 #define STOP_STATE   6 //停止状态，舵机复位，电机置零，必须重置单片机才能恢复
 
+#define MAX_DATA_POINTS 10 //最小二乘法采样数据点
+
 extern const uint16_t GRAPH_CENTER_X;
 
 extern uint8_t global_state;
@@ -62,6 +64,11 @@ extern uint8_t no_pepper_flag; //无辣椒标志位
 extern uint16_t cur_motor_pul_cnt;
 extern uint16_t tar_motor_pul_cnt;
 
+extern uint16_t P_Height_arr[10];
+extern uint8_t parr_p;
+extern uint16_t h_aligntment_cnt;
+extern int16_t simu_tarh;
+
 typedef struct {
     int16_t set_targetS;
     int16_t pre_targetS;
@@ -78,6 +85,14 @@ typedef struct {
     int16_t pwm_out;
 } SPEED;
 
+// 定义数据点结构体
+typedef struct {
+    float x;
+    float y;
+} DataPoint;
+
+extern float H_a,H_b;
+
 extern SPEED whlx,whly;
 
 void spd_pid_init(void);
@@ -88,10 +103,12 @@ void Uart5RecvInit(void);
 void Uart5Recv_IdleCallback(void);
 int Uart5Recv_DealData(uint8_t *recvData, uint8_t *len);
 void set_x_location(int16_t now_x,int16_t tar_x);
+void set_y_location(int16_t now_y,int16_t tar_y);
 void flexible_servo_control(uint16_t length);
 void cut_servo_control(uint8_t state);
 void grab_servo_control(uint8_t state);
 void busket_servo_control(uint8_t state);
 void delay_us(uint32_t us);
+void height_data_init(void);
 
 #endif /* __MOTOR_H__ */

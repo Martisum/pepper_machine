@@ -45,10 +45,11 @@ void Uart4Recv_IdleCallback(void);
 int Uart4Recv_DealData(uint8_t *recvData, uint8_t *len);
 
 extern uint8_t wireless_test_in_flag;
+extern uint8_t y_pid_test_flag;
 
 uint16_t tim7_counter=0;
 uint8_t coordinate_recv_cnt=0;
-uint8_t alighment_cnt=0;
+uint16_t alighment_cnt=0;
 uint8_t strech_length=0;
 uint8_t strech_retry_time=0; //伸缩定位的重试时间
 uint8_t strech_ok_time=0; //成功抓到辣椒图像的帧数
@@ -56,6 +57,14 @@ uint8_t strech_wait_flag=0; //等待确认openmv已经识别到辣椒的标志位
 uint8_t strech_goback_flag=0; //等待机械爪返回的标志位
 uint8_t shear_ok_time=0;
 uint8_t isPepper=0;
+
+//测距高度与图像高度拟合
+#define GRAPH_Y1 360
+#define TOF_Y1 280
+#define GRAPH_Y2 500
+#define TOF_Y2 350
+#define K_SIMU (TOF_Y2-TOF_Y1)/(GRAPH_Y2-GRAPH_Y1)
+#define B_SIMU TOF_Y1-K_SIMU*GRAPH_Y1
 /* USER CODE END TD */
 
 /* Private define ------------------------------------------------------------*/
@@ -341,6 +350,9 @@ void TIM7_IRQHandler(void)
   /* USER CODE END TIM7_IRQn 0 */
   HAL_TIM_IRQHandler(&htim7);
   /* USER CODE BEGIN TIM7_IRQn 1 */
+  if(y_pid_test_flag==1){
+    set_y_location(tof_distance,300);
+  }
 
   if(Uart3Recv_DealData(Uart3RecvData,&Uart3RecvDataLen)==0){
     Uart3RecvData[Uart3RecvDataLen]='\0';
@@ -438,6 +450,7 @@ void TIM7_IRQHandler(void)
         global_state=LOCATE_STATE;
         //状态跳转完毕后，清空接收计数
         coordinate_recv_cnt=0;
+        h_aligntment_cnt=0; //清空定高
         oled_clear();
       }
 #endif
@@ -466,11 +479,20 @@ void TIM7_IRQHandler(void)
       __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
 #else
       set_x_location(x_pepper,GRAPH_CENTER_X);
+      simu_tarh=y_pepper*H_a+H_b;
+      if(simu_tarh>320) simu_tarh=315;
+      else if(simu_tarh<215) simu_tarh=215;
+      set_y_location(tof_distance,simu_tarh);
+      if(abs(simu_tarh-tof_distance)<30){
+        h_aligntment_cnt++;
+      }
+
       //对符合条件的进行计次，超过200次说明趋于稳定，则可以进入下一状态
       if(abs(x_pepper-GRAPH_CENTER_X)<=50) alighment_cnt++;
-      if(alighment_cnt>=200){
+      if(alighment_cnt>=150 && h_aligntment_cnt>=150){
         //清空对准计数，跳转到下一状态
         alighment_cnt=0;
+        h_aligntment_cnt=0;
         global_state=SPREAD_STATE;
         cut_servo_control(0);
         strech_length=0;
@@ -568,6 +590,7 @@ void TIM7_IRQHandler(void)
 #endif
     }else if(global_state==SHEAR_STATE){
 #ifdef PERFORMANCE_MODE
+      grab_servo_control(0); //夹持辣椒
       if(no_pepper_flag==0 || tim7_counter!=0){
         shear_ok_time=0;
         tim7_counter++;
@@ -586,6 +609,7 @@ void TIM7_IRQHandler(void)
         cut_servo_control(1);
         if(shear_ok_time>25){
           cut_servo_control(0);
+          busket_servo_control(1); //伸出收集筐
           tim7_counter=0;
           global_state=SHRINK_STATE;
           oled_clear();
@@ -620,8 +644,13 @@ void TIM7_IRQHandler(void)
       cut_servo_control(0);
 
       tim7_counter++;
+      if(tim7_counter>100){
+        grab_servo_control(1); //在路途中间松开辣椒
+      }
+      
       if(tim7_counter>200){
         tim7_counter=0;
+        busket_servo_control(0); //最后再把篮子收回
         global_state=STROLL_STATE;
         oled_clear();
       }

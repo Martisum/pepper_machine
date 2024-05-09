@@ -7,7 +7,7 @@
 #include "math.h"
 
 //**********PERFORMANCE_MODE_OPENLOOP_PARAM**********//
-uint8_t pmode_length=110;
+uint8_t pmode_length=70;
 //**********PERFORMANCE_MODE_OPENLOOP_PARAM**********//
 
 //**********STROLL_PERFORMANCE_MODE_OPENLOOP_PARAM**********//
@@ -15,7 +15,8 @@ uint16_t stroll_time=100;
 //**********STROLL_PERFORMANCE_MODE_OPENLOOP_PARAM**********//
 
 //const uint16_t GRAPH_CENTER_X=1536-716;
-const uint16_t GRAPH_CENTER_X=1540;
+const uint16_t GRAPH_CENTER_X=1325;
+const uint16_t GRAPH_CENTER_Y=358;
 const uint16_t SAGEN=400;
 
 uint8_t global_state=0;
@@ -34,10 +35,14 @@ uint16_t tar_motor_pul_cnt=0;
 // float v_kp1=4,v_ki1=1.5,v_kd1=0;
 // float v_kp2=4,v_ki2=1.5,v_kd2=0;
 float v_kp1=1,v_ki1=0,v_kd1=4;
-float v_kp2=1,v_ki2=0,v_kd2=0;
+float v_kp2=10,v_ki2=0,v_kd2=20;
 
 SPEED whlx,whly;
 SPEED dir;
+
+
+DataPoint H_Data[MAX_DATA_POINTS];
+float H_a,H_b;
 
 //舵机编号，OLED正对人方向，从上往下数，编号为1 2 3 4 5 6 7 8 
 //注意，第一组排针不是舵机！
@@ -46,7 +51,7 @@ SPEED dir;
 uint16_t servo_angle1=SAGEN;
 uint16_t servo_angle2=650; //伸缩盘舵机初始值
 uint16_t servo_angle3=SAGEN;
-uint16_t servo_angle4=160;
+uint16_t servo_angle4=350;
 uint16_t servo_angle5=SAGEN;
 uint16_t servo_angle6=SAGEN;
 uint16_t servo_angle7=SAGEN;
@@ -61,6 +66,10 @@ uint8_t Uart5RecvDataLen = 0; //实际接收数据的数组接收数据的长度，和Uart4RecvCnt
 extern DMA_HandleTypeDef hdma_uart5_rx;
 int16_t x_pepper,y_pepper; //解算后得到的辣椒坐标
 uint8_t no_pepper_flag=0; //无辣椒标志位
+uint16_t P_Height_arr[10]={280,200,200,200,200,200,200,200,200,200}; //辣椒高度存放数组
+uint8_t parr_p=0;
+uint16_t h_aligntment_cnt=0;
+int16_t simu_tarh=0;
 /* 初始化函数 */
 void Uart5RecvInit(void)
 {
@@ -136,8 +145,8 @@ void set_x_location(int16_t now_x,int16_t tar_x){
     whlx.pwm_out=whlx.PS*whlx.now_error+whlx.DS*(whlx.now_error-whlx.pre_error);
     whlx.pre_error=whlx.now_error;
 
-    if(whlx.pwm_out<0) whlx.pwm_out-=300;
-    else if(whlx.pwm_out>0) whlx.pwm_out+=300;
+    if(whlx.pwm_out<0) whlx.pwm_out-=350;
+    else if(whlx.pwm_out>0) whlx.pwm_out+=350;
 
     if(whlx.pwm_out>1000) whlx.pwm_out=1000;
     else if(whlx.pwm_out<-1000) whlx.pwm_out=-1000;
@@ -147,20 +156,22 @@ void set_x_location(int16_t now_x,int16_t tar_x){
 
 //这里now_y为当前测距值，tar_y为由图像高度转化而来的目标测距值
 //目标测距值输入的时候要有一个限制，避免出现无限下移
+//pwm为负数，上移
 void set_y_location(int16_t now_y,int16_t tar_y){
     whly.set_targetS=tar_y;
-    whly.now_error=whly.set_targetS-tar_y;
+    whly.now_error=whly.set_targetS-now_y;
 
-    whly.pwm_out=whly.PS*whlx.now_error+whly.DS*(whly.now_error-whly.pre_error);
+    whly.pwm_out=whly.PS*whly.now_error+whly.DS*(whly.now_error-whly.pre_error);
+    oled_show_int(0,7,whly.pwm_out,5);
     whly.pre_error=whly.now_error;
 
-    if(whly.pwm_out<0) whly.pwm_out-=350;
-    else if(whly.pwm_out>0) whly.pwm_out+=350;
+    if(whly.pwm_out<0) whly.pwm_out-=250;
+    else if(whly.pwm_out>0) whly.pwm_out+=250;
 
     if(whly.pwm_out>1000) whly.pwm_out=1000;
     else if(whly.pwm_out<-1000) whly.pwm_out=-1000;
     pwm2=whly.pwm_out;
-    set_motor_pwm(1,-whly.pwm_out);
+    set_motor_pwm(2,-whly.pwm_out);
 }
 
 //1为左右电机 2为上下电机、
@@ -218,7 +229,7 @@ void flexible_servo_control(uint16_t length){
     tar_motor_pul_cnt=length;
     if(tar_motor_pul_cnt>cur_motor_pul_cnt){
         //设置方向脚
-        HAL_GPIO_WritePin(DIR_GPIO_Port,DIR_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(DIR_GPIO_Port,DIR_Pin, GPIO_PIN_RESET);
         for(uint8_t i=0;i<50;i++){
             //gpio置一
             HAL_GPIO_WritePin(PUL_GPIO_Port,PUL_Pin, GPIO_PIN_SET);
@@ -230,7 +241,7 @@ void flexible_servo_control(uint16_t length){
         cur_motor_pul_cnt++;
     }else if(tar_motor_pul_cnt<cur_motor_pul_cnt){
         //设置方向脚
-        HAL_GPIO_WritePin(DIR_GPIO_Port,DIR_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(DIR_GPIO_Port,DIR_Pin, GPIO_PIN_SET);
         for(uint8_t i=0;i<50;i++){
             //gpio置一
             HAL_GPIO_WritePin(PUL_GPIO_Port,PUL_Pin, GPIO_PIN_SET);
@@ -246,14 +257,14 @@ void flexible_servo_control(uint16_t length){
 
 //state=0张开剪刀 state=1闭合剪刀
 void cut_servo_control(uint8_t state){
-    if(state==0) set_servo_angle(CUTTING_SERVO,160);
-    else if (state==1) set_servo_angle(CUTTING_SERVO,400);
+    if(state==0) set_servo_angle(CUTTING_SERVO,350);
+    else if (state==1) set_servo_angle(CUTTING_SERVO,600);
 }
 
 //state=0张开夹子 state=1闭合夹子
 void grab_servo_control(uint8_t state){
-    if(state==0) set_servo_angle(GRAB_SERVO,350);
-    else if (state==1) set_servo_angle(GRAB_SERVO,750);
+    if(state==1) set_servo_angle(GRAB_SERVO,350);
+    else if (state==0) set_servo_angle(GRAB_SERVO,750);
 }
 
 //state=0缩回篮子 state=1伸出篮子
@@ -261,6 +272,35 @@ void busket_servo_control(uint8_t state){
     if(state==0) set_servo_angle(BUSKET_SERVO,650);
     else if (state==1) set_servo_angle(BUSKET_SERVO,250);
 }
+
+// 定义线性回归函数
+void linearRegression(DataPoint* data, int n, float* a, float* b) {
+    float sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    for (int i = 0; i < n; i++) {
+        sumX += data[i].x;
+        sumY += data[i].y;
+        sumXY += data[i].x * data[i].y;
+        sumX2 += data[i].x * data[i].x;
+    }
+    float denominator = n * sumX2 - sumX * sumX;
+    *a = (n * sumXY - sumX * sumY) / denominator;
+    *b = (sumY * sumX2 - sumX * sumXY) / denominator;
+}
+
+void height_data_init(void){
+    H_Data[0].x=190;H_Data[0].y=178;
+    H_Data[1].x=195;H_Data[1].y=235;
+    H_Data[2].x=330;H_Data[2].y=271;
+    H_Data[3].x=500;H_Data[3].y=320;
+    H_Data[4].x=400;H_Data[4].y=273;
+    H_Data[5].x=339;H_Data[5].y=249;
+    H_Data[6].x=298;H_Data[6].y=227;
+    H_Data[7].x=258;H_Data[7].y=203;
+    H_Data[8].x=216;H_Data[8].y=177;
+    //H_Data[9].x=9;H_Data[9].y=9;
+    linearRegression(H_Data, 9, &H_a, &H_b);
+}
+
 
 // #define PC_WIRELESS 1
 #define BYTE0(dwTemp) (*(char *)(&dwTemp))
