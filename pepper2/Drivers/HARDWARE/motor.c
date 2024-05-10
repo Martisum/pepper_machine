@@ -51,7 +51,7 @@ float H_a,H_b;
 uint16_t servo_angle1=SAGEN;
 uint16_t servo_angle2=650; //伸缩盘舵机初始值
 uint16_t servo_angle3=SAGEN;
-uint16_t servo_angle4=350;
+uint16_t servo_angle4=260;
 uint16_t servo_angle5=SAGEN;
 uint16_t servo_angle6=SAGEN;
 uint16_t servo_angle7=SAGEN;
@@ -257,7 +257,7 @@ void flexible_servo_control(uint16_t length){
 
 //state=0张开剪刀 state=1闭合剪刀
 void cut_servo_control(uint8_t state){
-    if(state==0) set_servo_angle(CUTTING_SERVO,350);
+    if(state==0) set_servo_angle(CUTTING_SERVO,260);
     else if (state==1) set_servo_angle(CUTTING_SERVO,600);
 }
 
@@ -288,17 +288,26 @@ void linearRegression(DataPoint* data, int n, float* a, float* b) {
 }
 
 void height_data_init(void){
-    H_Data[0].x=190;H_Data[0].y=178;
-    H_Data[1].x=195;H_Data[1].y=235;
-    H_Data[2].x=330;H_Data[2].y=271;
-    H_Data[3].x=500;H_Data[3].y=320;
-    H_Data[4].x=400;H_Data[4].y=273;
-    H_Data[5].x=339;H_Data[5].y=249;
-    H_Data[6].x=298;H_Data[6].y=227;
-    H_Data[7].x=258;H_Data[7].y=203;
-    H_Data[8].x=216;H_Data[8].y=177;
-    //H_Data[9].x=9;H_Data[9].y=9;
-    linearRegression(H_Data, 9, &H_a, &H_b);
+    // H_Data[0].x=190;H_Data[0].y=178;
+    // H_Data[1].x=195;H_Data[1].y=235;
+    // H_Data[2].x=330;H_Data[2].y=271;
+    // H_Data[3].x=500;H_Data[3].y=320;
+    // H_Data[4].x=400;H_Data[4].y=273;
+    // H_Data[5].x=339;H_Data[5].y=249;
+    // H_Data[6].x=298;H_Data[6].y=227;
+    // H_Data[7].x=258;H_Data[7].y=203;
+    // H_Data[8].x=216;H_Data[8].y=177;
+    H_Data[0].x=500;H_Data[0].y=318;
+    H_Data[1].x=450;H_Data[1].y=294;
+    H_Data[2].x=410;H_Data[2].y=271;
+    H_Data[3].x=349;H_Data[3].y=260;
+    H_Data[4].x=308;H_Data[4].y=212;
+    H_Data[5].x=575;H_Data[5].y=313;
+    H_Data[6].x=533;H_Data[6].y=292;
+    H_Data[7].x=471;H_Data[7].y=268;
+    H_Data[8].x=442;H_Data[8].y=251;
+    H_Data[9].x=382;H_Data[9].y=246;
+    linearRegression(H_Data, 10, &H_a, &H_b);
 }
 
 //开启坐标数据接收 state=0关闭数据接收 state=1开启数据接收

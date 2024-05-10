@@ -57,6 +57,7 @@ uint8_t strech_wait_flag=0; //等待确认openmv已经识别到辣椒的标志位
 uint8_t strech_goback_flag=0; //等待机械爪返回的标志位
 uint8_t shear_ok_time=0;
 uint8_t isPepper=0;
+uint8_t atLeastOneCut_flag=0; //用在剪切状态，至少让剪刀剪一次，再缩回
 
 //测距高度与图像高度拟合
 #define GRAPH_Y1 360
@@ -518,9 +519,11 @@ void TIM7_IRQHandler(void)
     }else if(global_state==SPREAD_STATE){
 #ifdef PERFORMANCE_MODE
       flexible_servo_control(pmode_length);
+      busket_servo_control(1); //伸出收集筐
       if(cur_motor_pul_cnt>=pmode_length){
         global_state=SHEAR_STATE;
         tim7_counter=0;
+        atLeastOneCut_flag=0;
         oled_clear();
       }
 #else
@@ -591,7 +594,7 @@ void TIM7_IRQHandler(void)
     }else if(global_state==SHEAR_STATE){
 #ifdef PERFORMANCE_MODE
       grab_servo_control(0); //夹持辣椒
-      if(no_pepper_flag==0 || tim7_counter!=0){
+      if(no_pepper_flag==0 || tim7_counter!=0 || atLeastOneCut_flag==0){
         shear_ok_time=0;
         tim7_counter++;
         if(tim7_counter<150){
@@ -600,6 +603,7 @@ void TIM7_IRQHandler(void)
           cut_servo_control(1);
         }else if(tim7_counter>=300){
           tim7_counter=0;
+          atLeastOneCut_flag=1; //到这里肯定至少完成了一次裁剪，所以置一
         }
       }
       //no_pepper_flag==1是确保辣椒已经没有了
@@ -609,9 +613,10 @@ void TIM7_IRQHandler(void)
         cut_servo_control(1);
         if(shear_ok_time>25){
           cut_servo_control(0);
-          busket_servo_control(1); //伸出收集筐
+          //busket_servo_control(1); //伸出收集筐
           tim7_counter=0;
           //start_recv_coorData(0); //关闭信息发送
+          atLeastOneCut_flag=0;
           global_state=SHRINK_STATE;
           oled_clear();
         }
