@@ -79,6 +79,7 @@ extern uint8_t strech_ok_time;
 extern uint8_t strech_wait_flag;
 extern uint8_t strech_goback_flag;
 extern uint8_t shear_ok_time;
+extern uint8_t atLeastOneCut_flag;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -369,11 +370,16 @@ void execute(void)
 
       sprintf(tmp_str,"tim7_counter:%d",tim7_counter);
       oled_show_string(0, 2, tmp_str);
+
+      sprintf(tmp_str,"co_recv_cnt:%d",coordinate_recv_cnt);
+      oled_show_string(0, 3, tmp_str);
     }else if(global_state==SHRINK_STATE){
       oled_show_string(0, 0, "state: SHRINK_STATE");
 
       // sprintf(tmp_str,"shear_ok_time:%d",shear_ok_time);
       // oled_show_string(0, 1, tmp_str);
+      sprintf(tmp_str,"co_recv_cnt:%d",coordinate_recv_cnt);
+      oled_show_string(0, 1, tmp_str);
 
       sprintf(tmp_str,"tim7_counter:%d",tim7_counter);
       oled_show_string(0, 2, tmp_str);
@@ -409,6 +415,9 @@ void execute(void)
     {
       HAL_Delay(KEY_DelayTime);
       if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_RESET){
+        tim7_counter=0;
+        cut_servo_control(0);
+        atLeastOneCut_flag=0;
         global_state=SHRINK_STATE;
       }
     }

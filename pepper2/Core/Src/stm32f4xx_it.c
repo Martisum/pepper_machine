@@ -593,11 +593,13 @@ void TIM7_IRQHandler(void)
 #endif
     }else if(global_state==SHEAR_STATE){
 #ifdef PERFORMANCE_MODE
-      grab_servo_control(0); //夹持辣椒
       if(no_pepper_flag==0 || tim7_counter!=0 || atLeastOneCut_flag==0){
         shear_ok_time=0;
         tim7_counter++;
-        if(tim7_counter<150){
+        if(tim7_counter>75 && tim7_counter<=150){
+          //之所以放在这个判断，是为了进行一点延迟，使得夹持机构能够晚一点夹辣椒
+          grab_servo_control(0); //夹持辣椒
+        }else if(tim7_counter<150){
           cut_servo_control(0);
         }else if(tim7_counter>=150 && tim7_counter<300){
           cut_servo_control(1);
@@ -658,6 +660,7 @@ void TIM7_IRQHandler(void)
         tim7_counter=0;
         busket_servo_control(0); //最后再把篮子收回
         //start_recv_coorData(1);
+        coordinate_recv_cnt=0; //置零坐标信息保证进入巡逻状态时一定是无坐标信息
         global_state=STROLL_STATE;
         oled_clear();
       }

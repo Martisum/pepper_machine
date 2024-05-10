@@ -7,7 +7,7 @@
 #include "math.h"
 
 //**********PERFORMANCE_MODE_OPENLOOP_PARAM**********//
-uint8_t pmode_length=70;
+uint8_t pmode_length=65;
 //**********PERFORMANCE_MODE_OPENLOOP_PARAM**********//
 
 //**********STROLL_PERFORMANCE_MODE_OPENLOOP_PARAM**********//
@@ -52,7 +52,7 @@ uint16_t servo_angle1=SAGEN;
 uint16_t servo_angle2=650; //伸缩盘舵机初始值
 uint16_t servo_angle3=SAGEN;
 uint16_t servo_angle4=260;
-uint16_t servo_angle5=SAGEN;
+uint16_t servo_angle5=350;
 uint16_t servo_angle6=SAGEN;
 uint16_t servo_angle7=SAGEN;
 uint16_t servo_angle8=SAGEN;
@@ -264,7 +264,7 @@ void cut_servo_control(uint8_t state){
 //state=0张开夹子 state=1闭合夹子
 void grab_servo_control(uint8_t state){
     if(state==1) set_servo_angle(GRAB_SERVO,350);
-    else if (state==0) set_servo_angle(GRAB_SERVO,750);
+    else if (state==0) set_servo_angle(GRAB_SERVO,790);
 }
 
 //state=0缩回篮子 state=1伸出篮子
