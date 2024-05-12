@@ -15,7 +15,7 @@ uint16_t stroll_time=100;
 //**********STROLL_PERFORMANCE_MODE_OPENLOOP_PARAM**********//
 
 //const uint16_t GRAPH_CENTER_X=1536-716;
-const uint16_t GRAPH_CENTER_X=1325;
+const uint16_t GRAPH_CENTER_X=1295;
 const uint16_t GRAPH_CENTER_Y=358;
 const uint16_t SAGEN=400;
 
@@ -307,7 +307,10 @@ void height_data_init(void){
     H_Data[7].x=471;H_Data[7].y=268;
     H_Data[8].x=442;H_Data[8].y=251;
     H_Data[9].x=382;H_Data[9].y=246;
-    linearRegression(H_Data, 10, &H_a, &H_b);
+    H_Data[10].x=515;H_Data[10].y=314;
+    H_Data[11].x=585;H_Data[11].y=312;
+    H_Data[12].x=590;H_Data[12].y=312;
+    linearRegression(H_Data, 13, &H_a, &H_b);
 }
 
 //开启坐标数据接收 state=0关闭数据接收 state=1开启数据接收

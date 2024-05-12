@@ -33,7 +33,7 @@ extern const uint16_t SAGEN;
 #define SHRINK_STATE 5 //收缩机械爪，清空中间用到的所有变量，完成一个控制周期 状态跳转：无，延时后回到状态1
 #define STOP_STATE   6 //停止状态，舵机复位，电机置零，必须重置单片机才能恢复
 
-#define MAX_DATA_POINTS 10 //最小二乘法采样数据点
+#define MAX_DATA_POINTS 20 //最小二乘法采样数据点
 
 extern const uint16_t GRAPH_CENTER_X;
 
