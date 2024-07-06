@@ -80,6 +80,9 @@ extern uint8_t strech_wait_flag;
 extern uint8_t strech_goback_flag;
 extern uint8_t shear_ok_time;
 extern uint8_t atLeastOneCut_flag;
+extern uint16_t clock_cnt;
+extern uint16_t clock_wait_cnt;
+extern uint8_t perform_flex_flag;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -110,6 +113,7 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -144,8 +148,10 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   /**********初始化电机**********/
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);
+  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, 0);
   __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_3, 0);
   __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_4, 0);
   /**********初始化电机**********/
@@ -155,6 +161,7 @@ int main(void)
   oled_init();
   oled_clear();
   //printf("SystemWakeUp!\n");
+  global_state=NORMAL_STATE; //初始化状态机
   HAL_UART_Transmit(&huart4, (uint8_t *)"SystemWakeUp!\n", 18,1000);
   Uart4RecvInit();
   oled_show_string(0,0,(const uint8_t *)"SystemWakeUp!");
@@ -184,10 +191,14 @@ int main(void)
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, servo_angle4);
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, servo_angle1);
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, servo_angle2);
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, servo_angle7);
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
-  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
+  // __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, servo_angle7);
+  // __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
+  // __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
+  // __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 0);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 0);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, 0);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, 0);
   oled_show_string(0,3,(const uint8_t *)"All Servos Ready!");
   start_recv_coorData(1);
   oled_show_string(0,4,(const uint8_t *)"Send action Data!");
@@ -447,6 +458,69 @@ void execute(void)
     }
   }
 }
+
+void perform(void)
+{
+  oled_clear();
+  oled_show_string(0, 0, "perform()");
+  char tmp_str[25]={0};
+  tim7_counter=0;
+
+  global_state=NORMAL_STATE;
+  tlx_state=RIGHT_MOVE_STATE;
+  HAL_TIM_Base_Start_IT(&htim7);
+
+  uint8_t perform_length=10;
+  int8_t dir=1;
+
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 200);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, 200);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, 200);
+  __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, 200);
+
+  while (1)
+  {
+    oled_show_uint(0,2,tlx_state,5);
+    oled_show_uint(0,3,clock_cnt,5);
+    oled_show_uint(0,4,clock_wait_cnt,5);
+
+    if(perform_flex_flag==1){
+      if(perform_length>80){
+        dir=-1;
+      }else if(perform_length<10){
+        dir=1;
+      }
+      perform_length+=dir;
+      flexible_servo_control(perform_length);    
+    }
+    
+    
+    HAL_Delay(10);
+    if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_RESET)
+    {
+      HAL_Delay(KEY_DelayTime);
+      if (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_5) == GPIO_PIN_RESET)
+      {
+        HAL_TIM_Base_Stop_IT(&htim7);
+        //停止所有电机，复位所有舵机
+        tlx_state=STOP_MOVE_STATE;
+        set_motor_pwm(1,0);
+        set_motor_pwm(2,0);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, servo_angle3);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, servo_angle4);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, servo_angle1);
+        __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, servo_angle2);
+        __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, servo_angle7);
+        __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
+        __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
+        __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
+        MenuRender(1);
+        return;
+      }
+    }
+  }
+}
+
 
 void step_motor_test(){
   oled_clear();
@@ -912,6 +986,7 @@ void menu_init(void){
   add_subpage(&p0, "pid", &p2);
   add_subpage(&p0, "servo", &p3);
 
+  add_func(&p1, "<perform>",perform);
   add_func(&p1, "<execute>", execute);
   add_func(&p1, "<wireless_test>", wireless_test);
   add_func(&p1, "<angle_confirm>", angle_confirm);

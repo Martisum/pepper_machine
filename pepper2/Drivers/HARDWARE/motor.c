@@ -20,6 +20,7 @@ const uint16_t GRAPH_CENTER_Y=358;
 const uint16_t SAGEN=400;
 
 uint8_t global_state=0;
+uint8_t tlx_state=0; //定义表演模式状态
 uint8_t stroll_dir=0; //定义STROLL状态下电机的默认移动方向
 
 //motor1为上下电机 motor2是左右电机
@@ -257,14 +258,15 @@ void flexible_servo_control(uint16_t length){
 
 //state=0张开剪刀 state=1闭合剪刀
 void cut_servo_control(uint8_t state){
-    if(state==0) set_servo_angle(CUTTING_SERVO,260);
-    else if (state==1) set_servo_angle(CUTTING_SERVO,600);
+    if(state==0) set_servo_angle(CUTTING_SERVO,250);
+    else if (state==1) set_servo_angle(CUTTING_SERVO,650);
 }
 
 //state=0张开夹子 state=1闭合夹子
+//新装置将架子换成了旋转舵机，现在的角度都是旋转角，角度范围0-180度
 void grab_servo_control(uint8_t state){
-    if(state==1) set_servo_angle(GRAB_SERVO,350);
-    else if (state==0) set_servo_angle(GRAB_SERVO,790);
+    if(state==1) set_servo_angle(GRAB_SERVO,250);
+    else if (state==0) set_servo_angle(GRAB_SERVO,650);
 }
 
 //state=0缩回篮子 state=1伸出篮子

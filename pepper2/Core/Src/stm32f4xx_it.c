@@ -59,6 +59,10 @@ uint8_t shear_ok_time=0;
 uint8_t isPepper=0;
 uint8_t atLeastOneCut_flag=0; //用在剪切状态，至少让剪刀剪一次，再缩回
 
+uint16_t clock_cnt=0;
+uint16_t clock_wait_cnt=0;
+uint8_t perform_flex_flag=0;
+
 //测距高度与图像高度拟合
 #define GRAPH_Y1 360
 #define TOF_Y1 280
@@ -430,6 +434,70 @@ void TIM7_IRQHandler(void)
       }
       // Uart5RecvData[Uart5RecvDataLen]='\0';
       // printf("%s\r\n",Uart5RecvData);
+    }
+
+    if(global_state==NORMAL_STATE){
+      if(tlx_state==RIGHT_MOVE_STATE){
+        cut_servo_control(0);
+        if(clock_cnt>100){
+          tlx_state=DOWN_MOVE_STATE;
+          clock_cnt=0;
+        }else{
+          set_motor_pwm(1,-500);
+        }
+      }else if(tlx_state==DOWN_MOVE_STATE){
+        cut_servo_control(1);
+        if(clock_cnt>40){
+          tlx_state=LEFT_MOVE_STATE;
+          clock_cnt=0;
+        }else{
+          set_motor_pwm(2,-600);
+        }
+      }else if(tlx_state==LEFT_MOVE_STATE){
+        cut_servo_control(0);
+        if(clock_cnt>100){
+          tlx_state=UP_MOVE_STATE;
+          clock_cnt=0;
+        }else{
+          set_motor_pwm(1,500);
+        }
+      }else if(tlx_state==UP_MOVE_STATE){
+        cut_servo_control(1);
+        //set_y_location(tof_distance,310);
+        set_motor_pwm(2,600);
+        if(clock_cnt>40){
+          tlx_state=STOP_MOVE_STATE;
+          clock_cnt=0;
+        }
+      }else if(tlx_state==STOP_MOVE_STATE){
+        set_motor_pwm(1,0);
+        set_motor_pwm(2,0);
+        // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, servo_angle3);
+        // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, servo_angle4);
+        // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, servo_angle1);
+        // __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, servo_angle2);
+        // __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, servo_angle7);
+        // __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_2, servo_angle8);
+        // __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_3, servo_angle5);
+        // __HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_4, servo_angle6);
+      }
+
+      if(clock_cnt % 20 ==0){
+        perform_flex_flag=1;
+
+        set_motor_pwm(1,0);
+        set_motor_pwm(2,0);
+        clock_wait_cnt++;
+        if(clock_wait_cnt>150){
+          clock_wait_cnt=0;
+          clock_cnt++;
+        }
+      }else{
+        perform_flex_flag=0;
+        clock_cnt++;
+        clock_wait_cnt=0;
+        flexible_servo_control(10);
+      }
     }
 
     //状态机

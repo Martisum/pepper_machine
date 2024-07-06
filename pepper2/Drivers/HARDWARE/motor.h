@@ -33,6 +33,13 @@ extern const uint16_t SAGEN;
 #define SHRINK_STATE 5 //收缩机械爪，清空中间用到的所有变量，完成一个控制周期 状态跳转：无，延时后回到状态1
 #define STOP_STATE   6 //停止状态，舵机复位，电机置零，必须重置单片机才能恢复
 
+//高校机器人比赛用的变量
+#define LEFT_MOVE_STATE  1
+#define RIGHT_MOVE_STATE 2
+#define UP_MOVE_STATE    3
+#define DOWN_MOVE_STATE  4
+#define STOP_MOVE_STATE  5
+
 #define MAX_DATA_POINTS 20 //最小二乘法采样数据点
 
 extern const uint16_t GRAPH_CENTER_X;
@@ -68,6 +75,8 @@ extern uint16_t P_Height_arr[10];
 extern uint8_t parr_p;
 extern uint16_t h_aligntment_cnt;
 extern int16_t simu_tarh;
+
+extern uint8_t tlx_state;
 
 typedef struct {
     int16_t set_targetS;

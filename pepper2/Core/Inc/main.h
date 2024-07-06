@@ -67,6 +67,7 @@ void Error_Handler(void);
 #define PUL_GPIO_Port GPIOE
 #define ENA_Pin GPIO_PIN_11
 #define ENA_GPIO_Port GPIOE
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
